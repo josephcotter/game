@@ -1,2 +1,4 @@
 # game
-This is code in GML for a game I've been developing in my free time since February 2017. My vision for the game is for it to be a platformer with RPG elements.
+This is code in GML for a game I've been developing in my free time since February 2017. It's going to be a platformer with RPG elements. I will update this repository as major improvements are implemented. 
+
+MARCH 2 2017
