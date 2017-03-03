@@ -1,0 +1,10 @@
+//OBJECT CREATION
+alarm[0] = 8;
+
+//END STEP LOGIC
+image_xscale = master.image_xscale;
+x = master.x;
+y = master.y;
+
+//ALARM 0
+instance_destroy(); //sword object only exists for length of attack
