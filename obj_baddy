@@ -1,1 +1,264 @@
+//OBJECT CREATION
+vspd = 0;
+hspd = 0;
+walkspd = 2.5;
+grav = .2
+attack = 0;
+duck = 1;
+hurt = 0;
+justhurt = 0;
+hitcount = 0;
+blend = 0;
+facing = 1;
+dead = 0;
+sword_id = 0;
 
+//STEP EVENT
+toplayer = distance_to_object(obj_player);
+ground = place_meeting(x, y+1, obj_room);
+
+if (dead == 1 && ground) // if dead and on ground again, stop and change to rly dead sprite
+{
+    hspd = 0;
+    sprite_index = spr_badblonde_rly_dead;
+    while(place_meeting(x, y, obj_room))
+        x -= facing;
+    dead = 2;
+    alarm[5] = 30;
+}
+
+//sword collision
+if (!dead && !hurt && place_meeting(x, y, obj_player_sword))
+{ 
+    hitcount++;
+    if (hitcount == 16) //16 hits to kill
+    {
+        dead = 1;
+        vspd = -3; //get hit up
+        if (instance_exists(sword_id)) //destroying baddy sword if one exists
+        {
+            with(sword_id)
+                instance_destroy();
+        }
+        sprite_index = spr_badblonde_dead;
+        while(place_meeting(x, y, obj_room)) // get out of the wall
+            x -= facing;
+        alarm[4] = 90; // alarm 4 = instance destroy
+    }
+    
+    //justhurt = 1;
+    hurt = 1;
+    //attack = 0; // end attack
+    hspd = facing*3;
+    //vspd = -3;
+    alarm [2] = 12;
+    
+    if(obj_player.downthrust) // player bounces if successful downthrust
+    {
+        with (obj_player)
+        {
+            y -= vspd; //so that a collision doesn't occur below. vspd is usually large enough that when the players sword collides with baddy, so does the player
+            vspd = -3;
+            bounce = 1; //so variable jumpheight doesn't run
+           
+        }
+    }
+}
+    
+//dying
+if(dead == 3) //rly dyin -- flash until instance is destroyed
+{
+    if(blend % 4) //flash every other frame
+        image_blend = -1;
+    else
+        image_blend = 0;
+    blend ++;
+}
+
+//moving and attacking            
+if(!dead && !obj_player.dead) // dont interact with player if dead
+{
+    //moving
+    if(ground && !hurt)
+    {
+        if (toplayer <= 256 && toplayer > 20)//if less than half a screen from player and not too close, move towards player
+        {    
+            if (collision_line(x,y,obj_player.x, obj_player.y, obj_room,true,true) = noone) // if no walls between self and player
+            { 
+                    if (obj_player.x < x) //move toward player   
+                        hspd = -walkspd;        
+                   else 
+                        hspd = walkspd;       
+            }
+        }
+        else if (toplayer < 15) //back away if too close
+        {   
+             if(obj_player.x < x)
+                hspd = walkspd;
+            else
+                hspd = -walkspd; 
+        }
+        else 
+            hspd = 0; //if toplayer is between 15 and 20, don't move
+        
+        if(hitcount > 4 && !(duck % 3)) //jump at player if no attacks are landing
+        {
+            vspd = -3;
+            hspd = -facing*3;
+            ground = 0;
+        }
+           
+        //sprite mirroring
+        if (attack != 2 && abs(x - obj_player.x) > 10) //mirror if moving or attacking and not super close. avoids twitchin when player is coming down on u
+        {    
+            image_xscale = sign(x - obj_player.x);
+            facing = image_xscale;
+        }
+    }
+    
+    //attacking
+    if (!attack && !hurt && toplayer < 44)//attack if not already attacking, not hurt, and player is close enough to hit
+    { 
+        attack = 1;
+        sprite_index = spr_badblonde_windup;
+        alarm[6] = 4;
+    }
+            
+    if (ground && !hurt && attack == 2) // dont move during attack animation (attack = 1 when attacking, 2 just after attacking, and 0 otherwise
+        hspd = 0;
+    
+    //player collision    
+    if (place_meeting(x, y, obj_player)) // if player touches baddy body -- baddy sword collisions are handled in obj_baddy_sword
+    { 
+        with (obj_player)
+        {
+             if(!justhurt)
+             {  
+                dashing = 0; // new // end dash
+                donesliding = 0; // reset for next slide
+                
+                hspd = 2.9*sign(x - obj_baddy.x) //2.9 so that 30 frames can get hspd to 0 with decrements of .1 in the event that the player is crouching in a tunnel
+                
+                if(sprite_index == spr_player_crouch && place_meeting(x, y-16, obj_room)) //avoids entering crouch hurt sprite when you are hit while jumping near a ceiling
+                        sprite_index = spr_player_crouch_hurt;
+                else
+                {
+                    sprite_index = spr_player_hurt; //get hit upwards and use normal sprite if there is room to do so
+                    vspd = -2         
+                }
+                image_xscale = -sign(hspd);
+                alarm[2] = 30;
+                hurt = 1;
+                justhurt = 1;
+                hearts --;               
+                if (attacking) //if player is attacking and gets hit by enemy, sword object is destroyed and no more damage can be done. all attack variables reset, but player cannot attack for another 30 frames cuz hurt
+                {  
+                    justattacked = 0; 
+                    attacking = 0;
+                    regattack = 0;
+                    crouchattack = 0;
+                    downthrust = 0;
+                    with (obj_player_sword)
+                        instance_destroy();
+                }
+             }
+                       
+             if (!hearts)
+                dead = 1;
+        }
+        
+        duck = 1; //successful hit
+    }
+}
+
+//sprite flashing when hurt
+if (hurt)
+{
+    if (blend % 4)
+    {
+        image_blend = c_white;
+    }   
+    else //every 4 frames tint red
+    {   
+        image_blend = c_red;
+    }
+    blend++;
+}
+    
+//gravity
+vspd += .2;  
+
+//vertical collision detection
+if (place_meeting(x, y+vspd, obj_room))
+{   
+    while(!place_meeting(x, y +sign(vspd), obj_room))
+        y += sign(vspd);
+    vspd = 0;
+}
+
+y += vspd;
+
+if(obj_player.dead && ground) //stop moving if player has died
+    hspd = 0;
+
+//horizontal collision detection
+if (place_meeting(x + hspd, y, obj_room))
+{   
+    while(!place_meeting(x + sign(hspd), y, obj_room))
+        x += sign(hspd);
+    hspd = 0;
+}
+
+x += hspd;
+
+//ALARM 0
+if(!dead) // dont do any of this if dead
+{
+    attack = 3; //attack = 3 means attack just occurred
+    sprite_index = spr_badblonde;
+    alarm[1] = 16; //cant attack for 16 more frames
+}
+
+with (sword_id)
+    instance_destroy();
+    
+//ALARM 1
+attack = 0;
+
+//ALARM 2
+hurt = 0;
+blend = 0; //resetting blend timer
+image_blend = -1; //restoring sprite
+
+//ALARM 3
+justhurt = 0;
+
+//ALARM 4
+instance_destroy();      
+
+//ALARM 5
+dead = 3;
+with(obj_player)
+    alarm[5] = 90;
+    
+//ALARM 6
+//sword creation and sprite updating
+if(!dead)//dont bother if dead or if u got hit before alarm could go off
+{
+    attack = 2; // attack = 2 means attack is occuring
+    sword_id = instance_create(x, y, obj_baddy_sword) //creating sword. sword_id is unique id of created sword
+    with(sword_id)
+        master = other.id; // baddy is sword's master
+                
+    if (duck % 2)
+    {
+        sprite_index = spr_badblonde_attack;
+    }
+    else //if (ground) //only crouch attack on ground
+    {
+        sprite_index = spr_badblonde_crouch;
+        (sword_id).sprite_index = spr_badblonde_crouch_sword;
+    }
+    duck++;
+    alarm[0] = 16;
+}
