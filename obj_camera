@@ -1,0 +1,6 @@
+//all camera movement is handled here
+view_xview = lerp(view_xview, obj_player.x-(view_wview/2), 0.1);
+view_yview = lerp(view_yview, obj_player.y-(view_hview/2), 0.1);
+
+view_xview = clamp(view_xview, 0, room_width - view_wview);
+view_yview = clamp(view_yview, 0, room_height - view_hview);
