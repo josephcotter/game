@@ -303,3 +303,50 @@ if (place_meeting(x + hspd, y, obj_room))
 x += hspd;
 
 cameramove(); //camera script -- follows player. also handles stats through background manipulation
+
+//ALARM 0
+//restoring sprite
+if(!hurt) //if hurt, then sprite has already changed
+{
+    if (crouchattack)
+    {
+        sprite_index = spr_player_crouch;
+    }
+    else
+    {
+        sprite_index = spr_player;
+        
+    }
+}
+with (obj_player_sword)
+{
+    instance_destroy(); //destroying sword object
+}
+attacking = 0;
+regattack = 0;
+crouchattack = 0;
+downthrust = 0;
+alarm [1] = 8; //cannot attack for another 8 frames
+
+//ALARM 1
+justattacked = 0;
+
+//ALARM 2
+//restoring sprite
+if(!place_meeting (x, y - 16, obj_room)) 
+    sprite_index = spr_player;
+else
+    sprite_index = spr_player_crouch;
+hurt = 0;
+alarm[3] = 12;
+
+//ALARM 3
+justhurt = 0;
+
+//ALARM 4
+sprite_index = spr_player_dead;
+alarm[5] = 90;
+
+//ALARM 5
+room_restart();
+
