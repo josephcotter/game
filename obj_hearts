@@ -1,0 +1,36 @@
+if(obj_player.hearts != 6)
+{           
+             switch (obj_player.hearts)
+                {
+                    case 5:
+                    {
+                        sprite_index = spr_h5;
+                        break;
+                    }
+                    case 4:
+                    {
+                        sprite_index = spr_h4;
+                        break;
+                    }
+                    case 3:
+                    {
+                        sprite_index = spr_h3;
+                        break;
+                    }
+                    case 2:
+                    {
+                        sprite_index = spr_h2;
+                        break;
+                    }                
+                    case 1:
+                    {
+                        sprite_index = spr_h1;
+                        break;
+                    }
+                    default:
+                       sprite_index = spr_h0;
+                }
+}
+    
+x = view_xview + 32;
+y = view_yview + 224; //256 - 32 = 224
