@@ -3,4 +3,4 @@ This is code in GML for a little game I've been developing in my free time since
 
 //CAPITAL LETTERS divide separate events within each object
 
-MARCH 2 2017
+last updated Jan 2018
